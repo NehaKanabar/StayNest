@@ -5,6 +5,7 @@ import com.example.airBnb.demo.entity.Hotel;
 import com.example.airBnb.demo.entity.Room;
 import com.example.airBnb.demo.exception.ResourceNotFoundException;
 import com.example.airBnb.demo.repository.HotelRepository;
+import com.example.airBnb.demo.repository.RoomRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -18,12 +19,14 @@ public class HostelServiceImpl implements HotelService{
     private final ModelMapper modelMapper;
     private final HotelDto hotelDto;
     private final InventoryService inventoryService;
+    private final RoomRepository  roomRepository;
 
-    public HostelServiceImpl(HotelRepository hotelRepository, ModelMapper modelMapper, HotelDto hotelDto, InventoryService inventoryService) {
+    public HostelServiceImpl(HotelRepository hotelRepository, ModelMapper modelMapper, HotelDto hotelDto, InventoryService inventoryService, RoomRepository roomRepository) {
         this.hotelRepository = hotelRepository;
         this.modelMapper = modelMapper;
         this.hotelDto = hotelDto;
         this.inventoryService = inventoryService;
+        this.roomRepository = roomRepository;
     }
 
     @Override
@@ -33,11 +36,13 @@ public class HostelServiceImpl implements HotelService{
                 .findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel not found with is: "+id));
 
-        hotelRepository.deleteById(id);
+
         for(Room room : hotel.getRooms())
         {
-            inventoryService.deleteFutureInventories(room);
+            inventoryService.deleteAllInventories(room);
+            roomRepository.deleteById(room.getId());
         }
+        hotelRepository.deleteById(id);
     }
 
     @Override
