@@ -1,6 +1,8 @@
 package com.example.airBnb.demo.service;
 
 import com.example.airBnb.demo.dto.HotelDto;
+import com.example.airBnb.demo.dto.RoomDto;
+import com.example.airBnb.demo.dto.HotelInfoDto;
 import com.example.airBnb.demo.entity.Hotel;
 import com.example.airBnb.demo.entity.Room;
 import com.example.airBnb.demo.exception.ResourceNotFoundException;
@@ -10,6 +12,8 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -58,6 +62,16 @@ public class HostelServiceImpl implements HotelService{
         {
             inventoryService.initializeRoomForAYear(room);
         }
+    }
+
+    @Override
+    public HotelInfoDto getHotelInfoById(Long hotelId) {
+        Hotel hotel = hotelRepository
+                .findById(hotelId)
+                .orElseThrow(()-> new ResourceNotFoundException("Hotel not found with ID: "+hotelId));
+
+        List<RoomDto> rooms = hotel.getRooms().stream().map((element)->modelMapper.map(element,RoomDto.class)).toList();
+        return new HotelInfoDto(modelMapper.map(hotel,HotelDto.class),rooms);
     }
 
     @Override
