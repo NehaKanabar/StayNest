@@ -3,13 +3,11 @@ package com.example.airBnb.demo.service;
 
 import com.example.airBnb.demo.dto.BookingDto;
 import com.example.airBnb.demo.dto.BookingRequest;
+import com.example.airBnb.demo.dto.GuestDto;
 import com.example.airBnb.demo.entity.*;
 import com.example.airBnb.demo.entity.enums.BookingStatus;
 import com.example.airBnb.demo.exception.ResourceNotFoundException;
-import com.example.airBnb.demo.repository.BookingRepository;
-import com.example.airBnb.demo.repository.HotelRepository;
-import com.example.airBnb.demo.repository.InventoryRepository;
-import com.example.airBnb.demo.repository.RoomRepository;
+import com.example.airBnb.demo.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +32,14 @@ public class BookingServiceImpl implements BookingService {
     private final InventoryRepository inventoryRepository;
     private final ModelMapper modelMapper;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository, ModelMapper modelMapper) {
+    private final GuestRepository guestRepository;
+
+    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository,GuestRepository guestRepository, ModelMapper modelMapper) {
         this.bookingRepository = bookingRepository;
         this.hotelRepository = hotelRepository;
         this.roomRepository = roomRepository;
         this.inventoryRepository = inventoryRepository;
+        this.guestRepository = guestRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -72,16 +73,13 @@ public class BookingServiceImpl implements BookingService {
         }
         inventoryRepository.saveAll(inventoryList);
 
-        // Create the Booking
-        User user = new User();
-        user.setId(1L); // TODO: REMOVE DUMMY USER
 
         // TODO: CALCULATE DYNAMIC PRICE
         Booking booking = new Booking(
                 null,  // Assuming ID is auto-generated
                 hotel,
                 room,
-                user,
+                getCurrentUser(),
                 bookingRequest.getRoomsCount(),
                 bookingRequest.getCheckInDate(),
                 bookingRequest.getCheckOutDate(),
@@ -96,6 +94,50 @@ public class BookingServiceImpl implements BookingService {
 
         booking = bookingRepository.save(booking);
         return modelMapper.map(booking, BookingDto.class);
+    }
+
+    @Override
+    @Transactional
+    public BookingDto addGuests(Long bookingId, List<GuestDto> guestDtoList) {
+        log.info("Adding guest for booking with id: {}",bookingId);
+
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(()->
+                new ResourceNotFoundException("Booking not found with id: "+bookingId));
+
+         if(hasBookingExpired(booking))
+         {
+             throw new IllegalStateException("Booking has already expired");
+         }
+
+         if(booking.getBookingStatus() != BookingStatus.RESERVED)
+         {
+             throw new IllegalStateException("Booking is not under reserved state, can not add guests");
+         }
+
+         for(GuestDto guestDto: guestDtoList)
+         {
+             Guest guest= modelMapper.map(guestDto, Guest.class);
+             guest.setUser(getCurrentUser());
+             guest = guestRepository.save(guest);
+             booking.getGuests().add(guest);
+
+         }
+         booking.setBookingStatus(BookingStatus.GUEST_ADDED);
+         booking = bookingRepository.save(booking);
+
+         return modelMapper.map(booking,BookingDto.class);
+    }
+
+    public boolean hasBookingExpired(Booking booking)
+    {
+        return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());
+    }
+
+    public User getCurrentUser()
+    {
+        User user = new User();
+        user.setId(1L); //TODO: REMOVE DUMMY USER
+        return user;
     }
 }
 

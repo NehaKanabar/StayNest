@@ -18,6 +18,8 @@ import java.util.Set;
 @NoArgsConstructor
 public class Booking {
 
+     public Booking(){}
+
      @Id
      @GeneratedValue(strategy = GenerationType.IDENTITY)
      private Long id;
