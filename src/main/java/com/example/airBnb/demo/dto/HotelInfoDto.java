@@ -1,6 +1,4 @@
 package com.example.airBnb.demo.dto;
-
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -34,6 +32,4 @@ public class HotelInfoDto {
 
     private HotelDto hotel;
     private List<RoomDto> rooms;
-
-
 }

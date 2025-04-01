@@ -6,6 +6,7 @@ import com.example.airBnb.demo.entity.Hotel;
 import com.example.airBnb.demo.entity.Inventory;
 import com.example.airBnb.demo.entity.Room;
 import com.example.airBnb.demo.repository.InventoryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,14 +15,16 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
-public class InventorySeviceImpl implements InventoryService {
-
+public class InventoryServiceImpl implements InventoryService {
+    private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
     private final InventoryRepository inventoryRepository;
     private  final ModelMapper modelMapper;
 
-    public InventorySeviceImpl(InventoryRepository inventoryRepository, ModelMapper modelMapper) {
+    public InventoryServiceImpl(InventoryRepository inventoryRepository, ModelMapper modelMapper) {
         this.inventoryRepository = inventoryRepository;
         this.modelMapper = modelMapper;
     }
@@ -52,12 +55,14 @@ public class InventorySeviceImpl implements InventoryService {
 
     @Override
     public void deleteAllInventories(Room room) {
+        log.info("Deleting the inventories of room with id:{}",room.getId());
         LocalDate today = LocalDate.now();
         inventoryRepository.deleteByRoom(room);
     }
 
     @Override
     public Page<HotelDto> searchHotels(HotelSearchRequest hotelSearchRequest) {
+        log.info("Searching hotels for {} city from {}  to {}",hotelSearchRequest.getCity(),hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate());
         Pageable pageable = PageRequest.of(hotelSearchRequest.getPage(), hotelSearchRequest.getSize());
 
         Long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate())+1;
