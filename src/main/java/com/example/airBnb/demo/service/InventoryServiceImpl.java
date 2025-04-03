@@ -1,10 +1,12 @@
 package com.example.airBnb.demo.service;
 
 import com.example.airBnb.demo.dto.HotelDto;
+import com.example.airBnb.demo.dto.HotelPriceDto;
 import com.example.airBnb.demo.dto.HotelSearchRequest;
 import com.example.airBnb.demo.entity.Hotel;
 import com.example.airBnb.demo.entity.Inventory;
 import com.example.airBnb.demo.entity.Room;
+import com.example.airBnb.demo.repository.HotelMinPriceRepository;
 import com.example.airBnb.demo.repository.InventoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -23,10 +25,12 @@ public class InventoryServiceImpl implements InventoryService {
     private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
     private final InventoryRepository inventoryRepository;
     private  final ModelMapper modelMapper;
+    private final HotelMinPriceRepository hotelMinPriceRepository;
 
-    public InventoryServiceImpl(InventoryRepository inventoryRepository, ModelMapper modelMapper) {
+    public InventoryServiceImpl(InventoryRepository inventoryRepository, ModelMapper modelMapper, HotelMinPriceRepository hotelMinPriceRepository) {
         this.inventoryRepository = inventoryRepository;
         this.modelMapper = modelMapper;
+        this.hotelMinPriceRepository = hotelMinPriceRepository;
     }
 
     @Override
@@ -62,13 +66,13 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Page<HotelDto> searchHotels(HotelSearchRequest hotelSearchRequest) {
+    public Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest) {
         log.info("Searching hotels for {} city from {}  to {}",hotelSearchRequest.getCity(),hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate());
         Pageable pageable = PageRequest.of(hotelSearchRequest.getPage(), hotelSearchRequest.getSize());
 
         Long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate())+1;
 
-        Page<Hotel> hotelPage = inventoryRepository.findHotelsWithAvailableInventory(hotelSearchRequest.getCity(),hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate(),hotelSearchRequest.getRoomsCount(),dateCount,pageable);
-        return hotelPage.map((element)->modelMapper.map(element,HotelDto.class));
+        Page<HotelPriceDto> hotelPage = hotelMinPriceRepository.findHotelsWithAvailableInventory(hotelSearchRequest.getCity(),hotelSearchRequest.getStartDate(),hotelSearchRequest.getEndDate(),hotelSearchRequest.getRoomsCount(),dateCount,pageable);
+        return hotelPage;
     }
 }
