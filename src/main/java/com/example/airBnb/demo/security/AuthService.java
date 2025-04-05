@@ -5,6 +5,7 @@ import com.example.airBnb.demo.dto.SignUpRequestDto;
 import com.example.airBnb.demo.dto.UserDto;
 import com.example.airBnb.demo.entity.User;
 import com.example.airBnb.demo.entity.enums.Role;
+import com.example.airBnb.demo.exception.ResourceNotFoundException;
 import com.example.airBnb.demo.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -62,5 +63,14 @@ public class AuthService {
           arr[1] = jwtService.generateRefreshToken(user);
 
           return arr;
+    }
+
+    public String refreshToken(String refreshToken)
+    {
+        Long id = jwtService.getUserIdFromToken(refreshToken);
+
+        User user = userRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("user not found with id: "+id));
+
+        return jwtService.generateRefreshToken(user);
     }
 }
