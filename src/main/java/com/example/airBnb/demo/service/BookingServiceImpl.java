@@ -16,6 +16,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -89,8 +90,8 @@ public class BookingServiceImpl implements BookingService {
                 LocalDateTime.now(),  // updatedAt (Auto-generate current timestamp)
                 BookingStatus.RESERVED,
                 new HashSet<>(),  // Assuming an empty set of guests for now
-                BigDecimal.TEN
-
+                BigDecimal.TEN,
+                "1"
         );
 
 
@@ -136,6 +137,23 @@ public class BookingServiceImpl implements BookingService {
          booking = bookingRepository.save(booking);
 
          return modelMapper.map(booking,BookingDto.class);
+    }
+
+    @Override
+    public String initiatePayments(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(()->new ResourceNotFoundException("Booking not found with bookingId: "+bookingId));
+
+        User user = getCurrentUser();
+        if(!user.equals(booking.getUser()))
+        {
+            throw new UnAuthorisedException("Booking does not belong to this user with is: "+user.getId());
+        }
+        if(hasBookingExpired(booking))
+        {
+            throw new IllegalArgumentException("Booking has already expired");
+        }
+
+
     }
 
     public boolean hasBookingExpired(Booking booking)

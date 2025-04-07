@@ -67,6 +67,17 @@ public class Booking {
      @Column(nullable = false,precision = 10,scale=2)
      private BigDecimal amount;
 
+     public String getPaymentSessionId() {
+          return paymentSessionId;
+     }
+
+     public void setPaymentSessionId(String paymentSessionId) {
+          this.paymentSessionId = paymentSessionId;
+     }
+
+     @Column(unique = true)
+     private String paymentSessionId;
+
      public Long getId() {
           return id;
      }
@@ -163,7 +174,7 @@ public class Booking {
           this.amount = amount;
      }
 
-     public Booking(Long id, Hotel hotel, Room room, User user, Integer roomsCount, LocalDate checkInDate, LocalDate checkOutDate, LocalDateTime createdAt, LocalDateTime updatedAt, BookingStatus bookingStatus, Set<Guest> guests, BigDecimal amount) {
+     public Booking(Long id, Hotel hotel, Room room, User user, Integer roomsCount, LocalDate checkInDate, LocalDate checkOutDate, LocalDateTime createdAt, LocalDateTime updatedAt, BookingStatus bookingStatus, Set<Guest> guests, BigDecimal amount, String paymentSessionId) {
           this.id = id;
           this.hotel = hotel;
           this.room = room;
@@ -176,5 +187,6 @@ public class Booking {
           this.bookingStatus = bookingStatus;
           this.guests = guests;
           this.amount = amount;
+          this.paymentSessionId = paymentSessionId;
      }
 }
