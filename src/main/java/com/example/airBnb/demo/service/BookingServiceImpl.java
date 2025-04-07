@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -34,16 +35,21 @@ public class BookingServiceImpl implements BookingService {
     private final RoomRepository roomRepository;
     private final InventoryRepository inventoryRepository;
     private final ModelMapper modelMapper;
+    private final CheckoutService checkoutService;
 
     private final GuestRepository guestRepository;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository,GuestRepository guestRepository, ModelMapper modelMapper) {
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
+    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository, GuestRepository guestRepository, ModelMapper modelMapper, CheckoutService checkoutService) {
         this.bookingRepository = bookingRepository;
         this.hotelRepository = hotelRepository;
         this.roomRepository = roomRepository;
         this.inventoryRepository = inventoryRepository;
         this.guestRepository = guestRepository;
         this.modelMapper = modelMapper;
+        this.checkoutService = checkoutService;
     }
 
     @Override
@@ -78,21 +84,31 @@ public class BookingServiceImpl implements BookingService {
 
 
         // TODO: CALCULATE DYNAMIC PRICE
-        Booking booking = new Booking(
-                null,  // Assuming ID is auto-generated
-                hotel,
-                room,
-                getCurrentUser(),
-                bookingRequest.getRoomsCount(),
-                bookingRequest.getCheckInDate(),
-                bookingRequest.getCheckOutDate(),
-                LocalDateTime.now(),  // createdAt (Auto-generate current timestamp)
-                LocalDateTime.now(),  // updatedAt (Auto-generate current timestamp)
-                BookingStatus.RESERVED,
-                new HashSet<>(),  // Assuming an empty set of guests for now
-                BigDecimal.TEN,
-                "1"
-        );
+//        Booking booking = new Booking(
+//                null,  // Assuming ID is auto-generated
+//                hotel,
+//                room,
+//                getCurrentUser(),
+//                bookingRequest.getRoomsCount(),
+//                bookingRequest.getCheckInDate(),
+//                bookingRequest.getCheckOutDate(),
+//                LocalDateTime.now(),  // createdAt (Auto-generate current timestamp)
+//                LocalDateTime.now(),  // updatedAt (Auto-generate current timestamp)
+//                BookingStatus.RESERVED,
+//                new HashSet<>(),  // Assuming an empty set of guests for now
+//                BigDecimal.TEN
+//        );
+
+        Booking booking = new Booking.Builder()
+                .hotel(hotel)
+                .room(room)
+                .user(getCurrentUser())
+                .checkInDate(bookingRequest.getCheckInDate())
+                .checkOutDate(bookingRequest.getCheckOutDate())
+                .roomsCount(bookingRequest.getRoomsCount())
+                .bookingStatus(BookingStatus.RESERVED)
+                .amount(new BigDecimal("2500.00"))
+                .build();
 
 
         booking = bookingRepository.save(booking);
@@ -153,7 +169,11 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Booking has already expired");
         }
 
+        String sessionUrl = checkoutService.getCheckoutSession(booking,frontendUrl+"/payments/success",frontendUrl+"/payments/failure");
+        booking.setBookingStatus(BookingStatus.PAYMENTS_PENDING);
+        bookingRepository.save(booking);
 
+        return sessionUrl;
     }
 
     public boolean hasBookingExpired(Booking booking)
