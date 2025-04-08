@@ -9,6 +9,7 @@ import com.example.airBnb.demo.entity.enums.BookingStatus;
 import com.example.airBnb.demo.exception.ResourceNotFoundException;
 import com.example.airBnb.demo.exception.UnAuthorisedException;
 import com.example.airBnb.demo.repository.*;
+import com.example.airBnb.demo.strategy.PricingService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
 import com.stripe.model.Refund;
@@ -43,13 +44,14 @@ public class BookingServiceImpl implements BookingService {
     private final InventoryRepository inventoryRepository;
     private final ModelMapper modelMapper;
     private final CheckoutService checkoutService;
+    private final PricingService pricingService;
 
     private final GuestRepository guestRepository;
 
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository, GuestRepository guestRepository, ModelMapper modelMapper, CheckoutService checkoutService) {
+    public BookingServiceImpl(BookingRepository bookingRepository, HotelRepository hotelRepository, RoomRepository roomRepository, InventoryRepository inventoryRepository, GuestRepository guestRepository, ModelMapper modelMapper, CheckoutService checkoutService, PricingService pricingService) {
         this.bookingRepository = bookingRepository;
         this.hotelRepository = hotelRepository;
         this.roomRepository = roomRepository;
@@ -57,6 +59,7 @@ public class BookingServiceImpl implements BookingService {
         this.guestRepository = guestRepository;
         this.modelMapper = modelMapper;
         this.checkoutService = checkoutService;
+        this.pricingService = pricingService;
     }
 
     @Override
@@ -84,27 +87,13 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // Reserve the room / update the booked count of inventories
-        for (Inventory inventory : inventoryList) {
-            inventory.setReservedCount(inventory.getReservedCount() + bookingRequest.getRoomsCount());
-        }
-        inventoryRepository.saveAll(inventoryList);
+        inventoryRepository.initBooking(room.getId(), bookingRequest.getCheckInDate(),bookingRequest.getCheckOutDate(), bookingRequest.getRoomsCount());
 
 
-        // TODO: CALCULATE DYNAMIC PRICE
-//        Booking booking = new Booking(
-//                null,  // Assuming ID is auto-generated
-//                hotel,
-//                room,
-//                getCurrentUser(),
-//                bookingRequest.getRoomsCount(),
-//                bookingRequest.getCheckInDate(),
-//                bookingRequest.getCheckOutDate(),
-//                LocalDateTime.now(),  // createdAt (Auto-generate current timestamp)
-//                LocalDateTime.now(),  // updatedAt (Auto-generate current timestamp)
-//                BookingStatus.RESERVED,
-//                new HashSet<>(),  // Assuming an empty set of guests for now
-//                BigDecimal.TEN
-//        );
+
+        // TODO: CALCULATE DYNAMIC PRICE -> COMPLETED
+        BigDecimal priceForOneRoom = pricingService.calculateTotalPrice(inventoryList);
+        BigDecimal totalPrice = priceForOneRoom.multiply(BigDecimal.valueOf(bookingRequest.getRoomsCount()));
 
         Booking booking = new Booking.Builder()
                 .hotel(hotel)
@@ -114,7 +103,7 @@ public class BookingServiceImpl implements BookingService {
                 .checkOutDate(bookingRequest.getCheckOutDate())
                 .roomsCount(bookingRequest.getRoomsCount())
                 .bookingStatus(BookingStatus.RESERVED)
-                .amount(new BigDecimal("2500.00"))
+                .amount(totalPrice)
                 .build();
 
 
