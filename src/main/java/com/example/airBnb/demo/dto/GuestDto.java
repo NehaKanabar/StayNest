@@ -5,13 +5,15 @@ import com.example.airBnb.demo.entity.enums.Gender;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 public class GuestDto {
     private Long id;
-    private User user;
     private String name;
     private Gender gender;
-    private Integer age;
+    private LocalDate dateOfBirth;
+
 
     public Long getId() {
         return id;
@@ -19,14 +21,6 @@ public class GuestDto {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 
     public String getName() {
@@ -45,11 +39,11 @@ public class GuestDto {
         this.gender = gender;
     }
 
-    public Integer getAge() {
-        return age;
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
     }
 
-    public void setAge(Integer age) {
-        this.age = age;
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
     }
 }
