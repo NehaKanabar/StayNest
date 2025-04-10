@@ -2,6 +2,7 @@ package com.example.airBnb.demo.controller;
 
 import com.example.airBnb.demo.dto.BookingDto;
 import com.example.airBnb.demo.dto.ProfileUpdateRequestDto;
+import com.example.airBnb.demo.dto.UserDto;
 import com.example.airBnb.demo.service.BookingService;
 import com.example.airBnb.demo.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class UserController {
         this.bookingService = bookingService;
     }
 
-    @PutMapping("/profile")
+    @PatchMapping("/profile")
     public ResponseEntity<Void> updateProfile(@RequestBody ProfileUpdateRequestDto profileUpdateRequestDto)
     {
         userService.updateProfile(profileUpdateRequestDto);
@@ -32,6 +33,12 @@ public class UserController {
     public ResponseEntity<List<BookingDto>> getMyBookings()
     {
         return ResponseEntity.ok(bookingService.getMyBookings());
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<UserDto> getMyProfile()
+    {
+        return ResponseEntity.ok(userService.getMyProfile());
     }
 
 }
