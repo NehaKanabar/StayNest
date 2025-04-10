@@ -1,25 +1,42 @@
 package com.example.airBnb.demo.service;
 
+import com.example.airBnb.demo.dto.ProfileUpdateRequestDto;
 import com.example.airBnb.demo.entity.User;
 import com.example.airBnb.demo.exception.ResourceNotFoundException;
 import com.example.airBnb.demo.repository.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import static com.example.airBnb.demo.util.AppUtils.getCurrentUser;
+
 @Service
 public class UserServiceImpl implements  UserService, UserDetailsService {
 
     private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper) {
         this.userRepository = userRepository;
+        this.modelMapper = modelMapper;
     }
 
     @Override
     public User getUserById(Long id) {
         return userRepository.findById(id).orElseThrow(()->new ResourceNotFoundException("User not found with id: "+id));
+    }
+
+    @Override
+    public void updateProfile(ProfileUpdateRequestDto profileUpdateRequestDto) {
+        User user = getCurrentUser();
+
+        if(profileUpdateRequestDto.getDateOfBirth()!=null) user.setDateOfBirth(profileUpdateRequestDto.getDateOfBirth());
+        if(profileUpdateRequestDto.getGender()!=null) user.setGender(profileUpdateRequestDto.getGender());
+        if(profileUpdateRequestDto.getName()!=null) user.setName(profileUpdateRequestDto.getName());
+
+        userRepository.save(user);
     }
 
     @Override

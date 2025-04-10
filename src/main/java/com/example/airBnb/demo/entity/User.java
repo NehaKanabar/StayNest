@@ -1,5 +1,6 @@
 package com.example.airBnb.demo.entity;
 
+import com.example.airBnb.demo.entity.enums.Gender;
 import com.example.airBnb.demo.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +31,39 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String password;
+
+    private String name;
+
+    private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public User(Long id, String email, String password, String name, LocalDate dateOfBirth, Gender gender, Set<Role> roles) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.dateOfBirth = dateOfBirth;
+        this.gender = gender;
+        this.roles = roles;
+    }
 
     public Long getId() {
         return id;
@@ -94,18 +129,7 @@ public class User implements UserDetails {
         this.roles = roles;
     }
 
-    private String name;
-
     public User(){}
-
-    public User(Long id, String email, String password, String name, Set<Role> roles) {
-        this.id = id;
-        this.email = email;
-        this.password = password;
-        this.name = name;
-        this.roles = roles;
-    }
-
     @ElementCollection(fetch=FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<Role> roles;
