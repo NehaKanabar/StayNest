@@ -19,6 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.example.airBnb.demo.util.AppUtils.getCurrentUser;
 
 @Service
 public class HostelServiceImpl implements HotelService{
@@ -95,6 +98,18 @@ public class HostelServiceImpl implements HotelService{
     }
 
     @Override
+    public List<HotelDto> getAllHotels() {
+        User user = getCurrentUser();
+        log.info("Getting all hotels for the admin user with ID: {}",user.getId());
+
+        List<Hotel> hotels = hotelRepository.findByOwner(user);
+        return hotels
+                .stream()
+                .map((element)->modelMapper.map(element,HotelDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public HotelDto createNewHotel(HotelDto hotelDto) {
         log.info("Creating a new hotel with name: {}",hotelDto.getName());
         Hotel hotel = modelMapper.map(hotelDto,Hotel.class);
@@ -141,6 +156,7 @@ public class HostelServiceImpl implements HotelService{
         hotel = hotelRepository.save(hotel);
         return modelMapper.map(hotel,HotelDto.class);
     }
+
 
 
 }

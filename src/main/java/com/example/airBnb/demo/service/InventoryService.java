@@ -1,10 +1,11 @@
 package com.example.airBnb.demo.service;
 
-import com.example.airBnb.demo.dto.HotelDto;
-import com.example.airBnb.demo.dto.HotelPriceDto;
-import com.example.airBnb.demo.dto.HotelSearchRequest;
+import com.example.airBnb.demo.dto.*;
 import com.example.airBnb.demo.entity.Room;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
 
 public interface InventoryService {
 
@@ -13,4 +14,9 @@ public interface InventoryService {
     void deleteAllInventories(Room room);
 
     Page<HotelPriceDto> searchHotels(HotelSearchRequest hotelSearchRequest);
+
+
+    List<InventoryDto> getAllInventoyByRoom(Long roomId);
+
+    void updateInventory(Long roomId, UpdateInventoryRequestDto updateInventoryRequestDto);
 }

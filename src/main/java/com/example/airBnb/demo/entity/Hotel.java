@@ -131,7 +131,7 @@ public class Hotel {
     @Column(nullable = false)
     private Boolean active;
 
-   @ManyToOne(optional = false, fetch = FetchType.LAZY)
+   @ManyToOne(optional = false, fetch = FetchType.EAGER)
    private User owner;
 
    @OneToMany(mappedBy = "hotel")
